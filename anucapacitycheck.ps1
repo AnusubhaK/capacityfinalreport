@@ -2,6 +2,8 @@ Get-Cluster -Name SA-Compute-01 |
 Get-VMHost|
 Select Name,
 @{N='CPU GHz Capacity';E={[math]::Round($_.CpuTotalMhz/1000,2)}},
+@{N='CPU Core';E={[math]::$_.NumCpu}},
+@{N='CPU GHz Core';E={[math]::Round($_.CpuTotalMhz/(1000*$_.NumCpu),2)}},
 @{N='CPU GHz Used';E={[math]::Round($_.CpuUsageMhz/1000,2)}},
 @{N='CPU GHz Free';E={[math]::Round(($_.CpuTotalMhz - $_.CpuUsageMhz)/1000,2)}},
 @{N='Memory Capacity GB';E={[math]::Round($_.MemoryTotalGB,2)}},
