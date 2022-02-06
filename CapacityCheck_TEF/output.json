@@ -1,0 +1,57 @@
+{
+    "Business": [
+        {
+            "NFName": "SampleNF",
+            "Vendor": "Nokia",
+            "Environment": "Dev",
+            "NFCapacity": 2,
+            "FormID": 101,
+            "FormStatus": "Testing",
+            "Version": "1.1"
+        }
+    ],
+    "WorkerNodeCapacity": {
+        "WorkerNodes": 9,
+        "CPU": 11,
+        "RAM": 19,
+        "Storage": 26
+    },
+    "MasterNodeCapacity": {
+        "MasterNodes": 3,
+        "CPU": 6,
+        "RAM": 24,
+        "Storage": 150
+    },
+    "TotalCapacityRequired": {
+        "TotalReqNodes": 12,
+        "CPU": 17,
+        "RAM": 43,
+        "Storage": 176
+    },
+    "Clusters": [
+        {
+            "Name": "RADIO",
+            "FreeCPU": 3,
+            "FreeRAM": 0,
+            "FreeStorage": 167,
+            "HasCapacity": "No",
+            "ReservedCapacityPercent": 10
+        },
+        {
+            "Name": "MGMT",
+            "FreeCPU": 28,
+            "FreeRAM": 57,
+            "FreeStorage": 234,
+            "HasCapacity": "Yes",
+            "ReservedCapacityPercent": 10
+        },
+        {
+            "Name": "EDGE",
+            "FreeCPU": 3,
+            "FreeRAM": 0,
+            "FreeStorage": 167,
+            "HasCapacity": "No",
+            "ReservedCapacityPercent": 10
+        }
+    ]
+}
