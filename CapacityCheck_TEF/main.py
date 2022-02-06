@@ -1,5 +1,14 @@
 """
-JSON Parser script to read POD information
+Script to calculate cluster space
+Version: 0.0.1
+Author: 
+
+Parameters
+    (-w) -> Json file from web with node requirements
+    (-c) -> CSV file from shell with cluster space
+    (-o) -> JSON ourtput file name
+    ( please use -h for command line help)
+
 """
 
 import os
