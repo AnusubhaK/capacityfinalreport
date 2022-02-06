@@ -1,0 +1,47 @@
+Filename:  webforminput.json
+
+Business:
+   NFName: SampleNF
+   Vendor: Nokia
+   Environment: Dev
+   NFCapacity: 2
+   FormID: 101
+   FormStatus: Testing
+   Version: 1.1
+Capacity:
+   NodeType: Master/Worker
+   WorkerNodePool:
+     - nodecount:4
+       name: nodepool1
+       nodeCPU: 2     8
+       nodeMemory: 2  8
+       nodeStorage: 2 8
+     - nodecount:4
+       name: nodepool2 
+       nodeCPU: 3    12
+       nodeMemory: 2  8
+       nodeStorage: 4 16
+
+
+
+ MasterNode constant values
+
+Worker Node is less than or equal to 10 - vcpu -2 , RAM - 8, Storage- 50 
+Worker Node is less than or equal to 100 - vcpu -4 , RAM - 16, Storage- 50 
+Worker Node is less than or equal to 250 - vcpu -8 , RAM - 32, Storage- 50
+Worker Node is less than or equal to 500 - vcpu -16 , RAM - 64, Storage- 50
+
+
+Worker Node is less than or eaqual to  10 , Master Node nodecount = 3
+Worker Node is greater than 10 , Master Node Count =5
+
+Master Node
+
+nodecount = (Sum of worker node ) less than or equal to 10  nodecount = 3
+             nodecount = 3
+             fixed vcpu = 2  6
+             fixed Ram =8    24
+
+          
+       
+   
