@@ -1,0 +1,5 @@
+"Cluster","ClusterFreeCPUCore","ClusterFreeMemoryGB","ClusterFreeStorageGB"
+,,,
+"RADIO","4","1","186"
+"MGMT","6","5","186"
+"EDGE","4","1","186"
