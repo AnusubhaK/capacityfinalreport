@@ -29,6 +29,6 @@ foreach ($Cluster in $Clusterlist)
             FreeMemoryGB = $FreeMemoryGB
             FreeSpaceGB = $FreeDisk.FreeSpaceGB
         }
-        Select-Object ClusterName, HostName, TotalCPU, FreeMemoryGB, FreeSpaceGB
+        Select-Object ClusterName, HostName, FreeCPU, FreeMemoryGB, FreeSpaceGB
     }
 }
