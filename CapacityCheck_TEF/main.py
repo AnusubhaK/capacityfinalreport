@@ -16,11 +16,13 @@ import argparse
 import math
 import json
 import csv
+from turtle import clone
 
 # Define global variables for processing
 InputWorkerNodePool = []
 InputBusiness = []
 InputClusterCapacity = []
+InputClusterNames = []
 
 # Constant settings
 ClusterReservedCapacity = 10 # Percentage of reserved cluster to leave free for calculation
@@ -80,6 +82,8 @@ ResultCalculations_WN = [
 # Result to hold the final calculated cluster allocation
 ResultClusters = []
 ResultMasterNode = []
+ResultWorkerNode = []
+ResultUnallocatedNodes = []
 # Result to dump out JSON data
 ResultJSONDumpOut = {}
 
@@ -90,7 +94,7 @@ def writeresultJSON(filepath):
     ResultJSONDumpOut.update ({"Business": InputBusiness}) 
     ResultJSONDumpOut.update ({"RequiredMasterNode": ResultCalculations_WN[1]}) 
     ResultJSONDumpOut.update ({"MasterNodeAllocation": ResultMasterNode}) 
-    ResultJSONDumpOut.update ({"WorkerNodeAllocation": ResultClusters}) 
+    ResultJSONDumpOut.update ({"WorkerNodeAllocation": ResultWorkerNode}) 
 
     with open(filepath, "w") as outfile:
         json_object = json.dumps(ResultJSONDumpOut, indent = 4)
@@ -114,6 +118,8 @@ def readcsvclustercapacity(filpath):
         fields = next(csvreader) # Read field names, but its not used at the moment
         for row in csvreader:
             InputClusterCapacity.append(row)
+            if((row[0] not in InputClusterNames) and (len(row[0]) > 0)): # Collect Cluster names (unique only)
+                InputClusterNames.append (row[0])
     # Reserved capacity divider
     ClusterReservedCapacity_Divider = 0.9
     for cluster in InputClusterCapacity:
@@ -153,34 +159,45 @@ def calculate_workernode():
 
 
 # check Cluster Capacity
-def checkclustercapacity(WorkerNodeName, WorkerCPU, WorkerRAM, WorkerMem, NodeCount, ResultList):
+def checkclustercapacity(ClusterName,ClusterList, ResultUnallocatedNodes, WorkerNodeName, WorkerCPU, WorkerRAM, WorkerMem, NodeCount, ResultList):
     # find space for Worker Nodes
             ClustersRes = {}
             # Loop through all clustres and check if capacity is possible
-            for cluster in InputClusterCapacity:
+            for cluster in ClusterList:
                 # skip processing if cluster name or row is empty or if it was already allocated
                 if (len(cluster[0]) == 0):
                     continue
-        
+                
+                # Check space only from the specified cluster
+                if (cluster[0] != ClusterName):
+                    continue
+                
+                # Skip if host was already allocated
+                if (len(cluster[1]) == 0):
+                    continue
+
                 ClusterActCPU = float(cluster[2])    #Excel Col-3 Free CPU, reduce 10% as buffer and round down
                 ClusterActRAM = float(cluster[3])    #Excel Col-4 Free RAM, reduce 10% as buffer and round down
                 ClusterActCAP = float(cluster[4])    #Excel Col-5 Free Memory, reduce 10% as buffer and round down       
                 
                 if((WorkerCPU <= ClusterActCPU) and (WorkerRAM <= ClusterActRAM) and \
                 (WorkerMem <= ClusterActCAP)):
-                    ClustersRes.update ({"NodeName": WorkerNodeName})
-                    ClustersRes.update ({"NodeCount": NodeCount})                
-                    ClustersRes.update ({"ReservedCluster": cluster[0]})
-                    ClustersRes.update ({"ReservedHost": cluster[1]})
-                    cluster[0] = "" # Invalidate so no other Node can be allocated here
+                    ClustersRes.update ({"ClusterName": cluster[0]})
+                    ClustersRes.update ({"HostName": cluster[1]})                
+                    ClustersRes.update ({"AllocatedNode": WorkerNodeName})
+                    ClustersRes.update ({"AllocatedNodeCount": NodeCount})
+                    ResultList.append (ClustersRes)
+                    print(ClustersRes)
+                    cluster[1] = "" # Invalidate so no other Node can be allocated here
                     break
-            # Check if we have unallocated Nodes
-            if("ReservedCluster" not in ClustersRes):
-                ClustersRes.update ({"NodeName": WorkerNodeName})
-                ClustersRes.update ({"NodeCount": NodeCount})                
             
-            ResultList.append (ClustersRes)
-            print(ClustersRes)
+            # Check if we have unallocated Nodes
+            if("AllocatedNode" not in ClustersRes):
+                unallocRes = {}               
+                unallocRes.update ({"NodeName": WorkerNodeName})
+                unallocRes.update ({"NodeCount": NodeCount})
+                ResultUnallocatedNodes.append (unallocRes)
+
 
 
 # Calculate Cluster Capacity
@@ -239,18 +256,41 @@ if __name__ == "__main__":
     print(ResultCalculations_WN[1])
 
     # Find capacity for Master Node
-    print ("-----------------------------------------------------------------------")
-    print ("Allocate Master Nodes:")
-    for MasterCount in range(ResultCalculations_WN[1]['MasterNodes']):
-        checkclustercapacity("MasterNode",ResultCalculations_WN[1]['CPU'],ResultCalculations_WN[1]['RAM'],ResultCalculations_WN[1]['Storage'],MasterCount,ResultMasterNode)
+
+    
+    for ClusterName in InputClusterNames:
+        print ("-----------------------------------------------------------------------")
+        print ("Allocation for Cluster: " + ClusterName) 
+
+        ResultUnallocatedMasterNodes = []
+        ResultUnallocatedWorkerNodes = []       
+        ClusterList = (InputClusterCapacity)
+        for MasterCount in range(ResultCalculations_WN[1]['MasterNodes']):
+            checkclustercapacity(ClusterName,ClusterList,ResultUnallocatedMasterNodes,"MasterNode",ResultCalculations_WN[1]['CPU'],ResultCalculations_WN[1]['RAM'],ResultCalculations_WN[1]['Storage'],MasterCount,ResultMasterNode)
+        
+        for WorkerNode in InputWorkerNodePool:
+            for NodeCount in range(WorkerNode['Nodecount']):
+                checkclustercapacity(ClusterName,ClusterList,ResultUnallocatedWorkerNodes,WorkerNode['NodeName'],WorkerNode['NodeCPU'],WorkerNode['NodeRAM'],WorkerNode['NodeStorage'],NodeCount,ResultWorkerNode)
+
+        # Print unallocated Master and worker nodes per cluster
+        print ("---------------------------------------")
+        print ("Unallocated Master Nodes: ")  
+        for ResultUnallocatedMasterNode in ResultUnallocatedMasterNodes:
+            print (ResultUnallocatedMasterNode['NodeName'] + "    " + str(ResultUnallocatedMasterNode['NodeCount']))
+
+        print ("---------------------------------------")
+        print ("Unallocated Worker Nodes: ")  
+        for ResultUnallocatedWorkerNode in ResultUnallocatedWorkerNodes:
+            print (ResultUnallocatedWorkerNode['NodeName'] + "    " + str(ResultUnallocatedWorkerNode['NodeCount']))        
+
+        # Print unallocated clusters
+        print ("---------------------------------------")
+        print ("Unallocated free clusters: ")  
+        for freecluster in ClusterList:
+            if((len(freecluster[1]) != 0) and (freecluster[0] == ClusterName)):
+                print (freecluster[0] + "  " + freecluster[1])
 
 
-    #Check capacity for worker node
-    print ("-----------------------------------------------------------------------")
-    print ("Allocate Worker Nodes:")
-    for WorkerNode in InputWorkerNodePool:
-        for NodeCount in range(WorkerNode['Nodecount']):
-            checkclustercapacity(WorkerNode['NodeName'],WorkerNode['NodeCPU'],WorkerNode['NodeRAM'],WorkerNode['NodeStorage'],NodeCount,ResultClusters)
 
     #Write result
     writeresultJSON(args.outfile)
