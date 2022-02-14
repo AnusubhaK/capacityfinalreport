@@ -81,6 +81,7 @@ ResultCalculations_WN = [
 ]
 # Result to hold the final calculated cluster allocation
 ResultClusters = []
+ResultClustersConsolidated = []
 ResultMasterNode = []
 ResultWorkerNode = []
 ResultUnallocatedNodes = []
@@ -285,15 +286,25 @@ if __name__ == "__main__":
 
         # Print unallocated clusters
         print ("---------------------------------------")
-        print ("Unallocated free clusters: ")  
+        print ("Unallocated ESXI in clusters: ")  
         for freecluster in ClusterList:
             if((len(freecluster[1]) != 0) and (freecluster[0] == ClusterName)):
                 print (freecluster[0] + "  " + freecluster[1])
 
-
+        # Print consolidated result
+        if(ResultUnallocatedMasterNodes) or (ResultUnallocatedWorkerNodes):
+            ResultClustersConsolidated.append ((ClusterName + "   -   No Capacity"))
+        else:
+            ResultClustersConsolidated.append ((ClusterName + "   -   Has Capacity"))
 
     #Write result
     writeresultJSON(args.outfile)
+    print ("-----------------------------------------------------------------------")
+    print ("-----------------------------------------------------------------------")
+    print ("Consolidated Result: ")  
+    for ConsRes in ResultClustersConsolidated:
+        print (ConsRes)
+
     print("Script processing complete...")
 
     
